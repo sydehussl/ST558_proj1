@@ -198,7 +198,7 @@ Looking good! Now that we know our input data is valid, we can build the URL and
 
 ```{r}
 query.census <- function(year = 2022, numeric_vars = "AGEP", categorical_vars = "SEX", 
-                         geography = "State", specific_geo = 3) {
+                         geography = "State", specific_geo = 4) {
   # check for valid year
   if(year == 2020 | !(year %in% 2010:2022)) stop("Error: Invalid year. Specify a year between 2010 and 2022 (not 2020)")
   
@@ -231,32 +231,178 @@ query.census <- function(year = 2022, numeric_vars = "AGEP", categorical_vars = 
   }
   
   api_key <- "59c3be738e0d051c63b57b6327de0b11ef0f7a1e"
-  api_url <- paste0("https://api.census.gov/data/2022/acs/acs1/pums?get=",
-                    paste0(numeric_vars, collapse = ","),
+  api_url <- paste0("https://api.census.gov/data/",
+                    year,
+                    "/acs/acs1/pums?get=",
+                    paste0(numeric_vars, collapse = ","), # reformat numeric vars
                     ",",
-                    paste0(categorical_vars, collapse = ","),
+                    paste0(categorical_vars, collapse = ","), # reformat categorical vars
                     "&for=",
-                    geography,
+                    tolower(geography), # region type
                     ":",
-                    specific_geo, 
+                    specific_geo, # specific region
                     "&key=",
-                   api_key)
+                    api_key)
   
-  return(api_url)
+  api_return <- GET(api_url)
+  api_parsed <- fromJSON(rawToChar(api_return$content)) |>
+                as_tibble()
+  
+  # return just a preview to test func
+  return(head(api_parsed))
 }
 ```
 
+Let's test the function by calling it's default (request SEX, AGEP, PWGTP for the default state (4 = Arizona))
+```{r}
+query.census()
+```
 
+Great! Next, we need to make sure the data is cleaned and coded correctly. As we can see, the first row is the column names. Let's fix this:
+```{r}
+query.census <- function(year = 2022, numeric_vars = "AGEP", categorical_vars = "SEX", 
+                         geography = "State", specific_geo = 4) {
+  # check for valid year
+  if(year == 2020 | !(year %in% 2010:2022)) stop("Error: Invalid year. Specify a year between 2010 and 2022 (not 2020)")
+  
+  # check for valid numeric vars
+  numeric_vars_opts <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
+  if(length(numeric_vars) == 0) stop("No numeric variable selected. Specify at least one.")
+  for(i in numeric_vars) {
+    if(!(i %in% numeric_vars_opts)) stop("Invalid numeric variable. Specify a single variable or a vector of variables. Options: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP")
+  }
+  
+  numeric_vars <- c(numeric_vars, "PWGTP")
+  
+  # check for valid categorical vars
+  categorical_vars_opts <- c("FER", "HHL", "SCH", "SCHL", "SEX")
+  if(length(categorical_vars) == 0) stop("No categorical variable selected. Specify at least one or leave SEX as the default")
+  for(i in categorical_vars) {
+    if(!(i %in% categorical_vars_opts)) stop("Invalid categorical variable. Specify a single variable or a vector of variables. Options: FER, HHL, SCH, SCHL, SEX")
+  }
+  
+  # check for valid geography scope and region of interest
+  geography_opts <- c("Region", "State", "Division")
+  if(!(geography %in% geography_opts)) stop("Invalid geography classification. Specify one of: State, Region, Division")
+  if(specific_geo == "all") {
+    specific_geo = "*"
+  }
+  else {
+    if(geography == "State" & !(specific_geo %in% 1:50)) stop("Invalid state requested. Specify a number 1 to 50 or `all`")
+    if(geography == "Region" & !(specific_geo %in% 1:4)) stop("Invalid region requested. Specify a number 1 to 4 or `all`")
+    if(geography == "Division" & !(specific_geo %in% 1:9)) stop("Invalid division requested. Specify a number 1 to 9 or `all`")
+  }
+  
+  api_key <- "59c3be738e0d051c63b57b6327de0b11ef0f7a1e"
+  api_url <- paste0("https://api.census.gov/data/",
+                    year,
+                    "/acs/acs1/pums?get=",
+                    paste0(numeric_vars, collapse = ","), # reformat numeric vars
+                    ",",
+                    paste0(categorical_vars, collapse = ","), # reformat categorical vars
+                    "&for=",
+                    tolower(geography), # region type
+                    ":",
+                    specific_geo, # specific region
+                    "&key=",
+                    api_key)
+  
+  api_return <- GET(api_url)
+  api_parsed <- fromJSON(rawToChar(api_return$content)) |>
+                as_tibble()
+  
+  # fix col names
+  output <- api_parsed
+  names(output) <- output[1,]
+  output <- output[-1,]
+  
+  # return just a preview to test func
+  return(head(output))
+}
+```
 
+Our columns have names now, but we still need to work on the types of each column. After looking at the dictionary, we should break up the variables into the following categories:
 
+- Factor: SEX, FER, HHL, SCH, SCHL
+- Numeric: PWGTP, AGEP, GASP, GRPIP, JWMNP
+- Time: JWAP, JWDP
 
+```{r}
+query.census <- function(year = 2022, numeric_vars = "AGEP", categorical_vars = "SEX", 
+                         geography = "State", specific_geo = 4) {
+  # check for valid year
+  if(year == 2020 | !(year %in% 2010:2022)) stop("Error: Invalid year. Specify a year between 2010 and 2022 (not 2020)")
+  
+  # check for valid numeric vars
+  numeric_vars_opts <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
+  if(length(numeric_vars) == 0) stop("No numeric variable selected. Specify at least one.")
+  for(i in numeric_vars) {
+    if(!(i %in% numeric_vars_opts)) stop("Invalid numeric variable. Specify a single variable or a vector of variables. Options: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP")
+  }
+  
+  numeric_vars <- c(numeric_vars, "PWGTP")
+  
+  # check for valid categorical vars
+  categorical_vars_opts <- c("FER", "HHL", "SCH", "SCHL", "SEX")
+  if(length(categorical_vars) == 0) stop("No categorical variable selected. Specify at least one or leave SEX as the default")
+  for(i in categorical_vars) {
+    if(!(i %in% categorical_vars_opts)) stop("Invalid categorical variable. Specify a single variable or a vector of variables. Options: FER, HHL, SCH, SCHL, SEX")
+  }
+  
+  # check for valid geography scope and region of interest
+  geography_opts <- c("Region", "State", "Division")
+  if(!(geography %in% geography_opts)) stop("Invalid geography classification. Specify one of: State, Region, Division")
+  if(specific_geo == "all") {
+    specific_geo = "*"
+  }
+  else {
+    if(geography == "State" & !(specific_geo %in% 1:50)) stop("Invalid state requested. Specify a number 1 to 50 or `all`")
+    if(geography == "Region" & !(specific_geo %in% 1:4)) stop("Invalid region requested. Specify a number 1 to 4 or `all`")
+    if(geography == "Division" & !(specific_geo %in% 1:9)) stop("Invalid division requested. Specify a number 1 to 9 or `all`")
+  }
+  
+  api_key <- "59c3be738e0d051c63b57b6327de0b11ef0f7a1e"
+  api_url <- paste0("https://api.census.gov/data/",
+                    year,
+                    "/acs/acs1/pums?get=",
+                    paste0(numeric_vars, collapse = ","), # reformat numeric vars
+                    ",",
+                    paste0(categorical_vars, collapse = ","), # reformat categorical vars
+                    "&for=",
+                    tolower(geography), # region type
+                    ":",
+                    specific_geo, # specific region
+                    "&key=",
+                    api_key)
+  
+  api_return <- GET(api_url)
+  api_parsed <- fromJSON(rawToChar(api_return$content)) |>
+                as_tibble()
+  
+  # fix col names
+  output <- api_parsed
+  names(output) <- output[1,]
+  output <- output[-1,]
+  
+  
+  fctr_vars <- c("SEX", "FER", "HHL", "SCH", "SCHL")
+  numeric_vars <- c("PWGTP", 'AGEP', "GASP", "GRPIP", "JWMNP")
+  time_Vars <- c("JWAP", "JWDP")
+  
+  # recode variables
+  output <- output |> 
+            mutate(across(any_of(numeric_vars), ~ as.numeric(.x)),
+                   across(any_of(fctr_vars), ~ as.factor(.x)))
 
+  # return just a preview to test func
+  return(output)
+}
+```
 
-
-
-
-
-
+Double checking to see if our recoding works:
+```{r}
+head(query.census())
+```
 
 
 
