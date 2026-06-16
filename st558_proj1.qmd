@@ -5,4 +5,43 @@ format: html
 ---
 
 # Data Processing:
+learn structure of api call return
+```{r}
+library(httr)
+
+api_key <- "59c3be738e0d051c63b57b6327de0b11ef0f7a1e"
+
+base_url <- paste0("https://api.census.gov/data/2022/acs/acs1/pums?get=SEX,PWGTP,MAR&for=state:*&SCHL=24&key=",
+                   api_key)
+
+api_return <- GET(base_url)
+
+str(api_return)
+```
+looks like data is in content, need to parse:
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+library(jsonlite)
+
+parsed <- fromJSON(rawToChar(api_return$content)) |>
+          as_tibble()
+
+head(parsed)
+```
+first row returned is var names, we'll have to fix later
+
+## Helper Function
+
+
+
+
+
+
+
+
+
+
+
+
 
