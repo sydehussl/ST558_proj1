@@ -171,9 +171,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   ..$ x-content-type-options      : chr "nosniff"
   ..$ content-type                : chr "application/json;charset=utf-8"
-  ..$ date                        : chr "Tue, 16 Jun 2026 14:10:46 GMT"
+  ..$ date                        : chr "Tue, 16 Jun 2026 15:02:59 GMT"
   ..$ strict-transport-security   : chr "max-age=31536000"
-  ..$ set-cookie                  : chr "TS010383f0=01283c52a4138334c2fcd5cb88128e80a76e9b8397f67ea9d438f0f0a626b83a3f8f819a4a238176adf806fa769efa35d76d"| __truncated__
+  ..$ set-cookie                  : chr "TS010383f0=01283c52a49af0319f9035a7d4e58db5dfd19024637444324eaddead2966dddd5e6e394f5105c22c70b5f036523151fbaef9"| __truncated__
   ..$ transfer-encoding           : chr "chunked"
   ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ all_headers:List of 1
@@ -189,9 +189,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   .. .. ..$ content-security-policy     : chr "default-src 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self"| __truncated__
   .. .. ..$ x-content-type-options      : chr "nosniff"
   .. .. ..$ content-type                : chr "application/json;charset=utf-8"
-  .. .. ..$ date                        : chr "Tue, 16 Jun 2026 14:10:46 GMT"
+  .. .. ..$ date                        : chr "Tue, 16 Jun 2026 15:02:59 GMT"
   .. .. ..$ strict-transport-security   : chr "max-age=31536000"
-  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a4138334c2fcd5cb88128e80a76e9b8397f67ea9d438f0f0a626b83a3f8f819a4a238176adf806fa769efa35d76d"| __truncated__
+  .. .. ..$ set-cookie                  : chr "TS010383f0=01283c52a49af0319f9035a7d4e58db5dfd19024637444324eaddead2966dddd5e6e394f5105c22c70b5f036523151fbaef9"| __truncated__
   .. .. ..$ transfer-encoding           : chr "chunked"
   .. .. ..- attr(*, "class")= chr [1:2] "insensitive" "list"
  $ cookies    :'data.frame':    1 obs. of  7 variables:
@@ -201,10 +201,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   ..$ secure    : logi TRUE
   ..$ expiration: POSIXct[1:1], format: "Inf"
   ..$ name      : chr "TS010383f0"
-  ..$ value     : chr "01283c52a4138334c2fcd5cb88128e80a76e9b8397f67ea9d438f0f0a626b83a3f8f819a4a238176adf806fa769efa35d76df0610a"
+  ..$ value     : chr "01283c52a49af0319f9035a7d4e58db5dfd19024637444324eaddead2966dddd5e6e394f5105c22c70b5f036523151fbaef9e4e9d2"
  $ content    : raw [1:1157911] 5b 5b 22 53 ...
- $ date       : POSIXct[1:1], format: "2026-06-16 14:10:46"
- $ times      : Named num [1:6] 0 0.00753 0.16327 0.48278 0.94378 ...
+ $ date       : POSIXct[1:1], format: "2026-06-16 15:02:59"
+ $ times      : Named num [1:6] 0 0.00441 0.16369 0.48518 0.9917 ...
   ..- attr(*, "names")= chr [1:6] "redirect" "namelookup" "connect" "pretransfer" ...
  $ request    :List of 7
   ..$ method    : chr "GET"
@@ -262,6 +262,31 @@ Attaching package: 'jsonlite'</code></pre>
 <p>first row returned is var names, we’ll have to fix later</p>
 <section id="helper-function" class="level2">
 <h2 class="anchored" data-anchor-id="helper-function">Helper Function</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>query.census <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year =</span> <span class="dv">2022</span>, <span class="at">numeric_vars =</span> <span class="st">"AGEP"</span>, <span class="at">categorical_vars =</span> <span class="st">"SEX"</span>, </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                         <span class="at">geography =</span> <span class="st">"State"</span>, <span class="at">specific_geo =</span> <span class="st">""</span>) {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check for valid year</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">is.numeric</span>(year) <span class="sc">|</span> year <span class="sc">==</span> <span class="dv">2020</span> <span class="sc">|</span> <span class="sc">!</span>(year <span class="sc">%in%</span> <span class="dv">2010</span><span class="sc">:</span><span class="dv">2022</span>)) <span class="fu">stop</span>(<span class="st">"Error: Invalid year. Specify a year between 2010 and 2022 (not 2020)"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check for valid numeric vars</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  numeric_vars_opts <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(numeric_vars) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">stop</span>(<span class="st">"No numeric variable selected. Specify at least one."</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> numeric_vars) {</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(<span class="sc">!</span>(i <span class="sc">%in%</span> numeric_vars_opts)) <span class="fu">stop</span>(<span class="st">"Invalid numeric variable. Specify a single variable or a vector of variables. Options: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP"</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  numeric_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(numeric_vars, <span class="st">"PWGTP"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check for valid categorical vars</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  categorical_vars_opts <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">length</span>(categorical_vars) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">stop</span>(<span class="st">"No categorical variable selected. Specify at least one or leave SEX as the default"</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> categorical_vars) {</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(<span class="sc">!</span>(i <span class="sc">%in%</span> categorical_vars_opts)) <span class="fu">stop</span>(<span class="st">"Invalid categorical variable. Specify a single variable or a vector of variables. Options: FER, HHL, SCH, SCHL, SEX"</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="st">"API Would be called"</span>)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
 </section>

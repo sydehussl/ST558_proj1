@@ -33,6 +33,31 @@ first row returned is var names, we'll have to fix later
 
 ## Helper Function
 
+```{r}
+query.census <- function(year = 2022, numeric_vars = "AGEP", categorical_vars = "SEX", 
+                         geography = "State", specific_geo = "") {
+  # check for valid year
+  if(!is.numeric(year) | year == 2020 | !(year %in% 2010:2022)) stop("Error: Invalid year. Specify a year between 2010 and 2022 (not 2020)")
+  
+  # check for valid numeric vars
+  numeric_vars_opts <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
+  if(length(numeric_vars) == 0) stop("No numeric variable selected. Specify at least one.")
+  for(i in numeric_vars) {
+    if(!(i %in% numeric_vars_opts)) stop("Invalid numeric variable. Specify a single variable or a vector of variables. Options: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP")
+  }
+  
+  numeric_vars <- c(numeric_vars, "PWGTP")
+  
+  # check for valid categorical vars
+  categorical_vars_opts <- c("FER", "HHL", "SCH", "SCHL", "SEX")
+  if(length(categorical_vars) == 0) stop("No categorical variable selected. Specify at least one or leave SEX as the default")
+  for(i in categorical_vars) {
+    if(!(i %in% categorical_vars_opts)) stop("Invalid categorical variable. Specify a single variable or a vector of variables. Options: FER, HHL, SCH, SCHL, SEX")
+  }
+  
+  return("API Would be called")
+}
+```
 
 
 
