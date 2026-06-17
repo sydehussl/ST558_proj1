@@ -970,11 +970,49 @@ summary(big_test)
 ```
 Wait, it worked? Most of this project has been fistfights with my computer but this function actually worked first try. Beautiful.
 
+## Fixing Incorrect Time Function
 
+One of my group mates asked if the coding for `JWAP` was different than for `JWDP`. I realized I never checked for a difference because clearly they'd be the same, right? WRONG. My existing function works for `JWAP` but we'll need to make a new one for `JWDP`. I'm going to add an argument to my `fix.time()` function to specify which is being computed. Looking at the values `JWDP` takes on, it seems more borked than `JWAP`. The pattern seems to be:
 
+- 1-6: 30 min jumps
+- 7-18: 10 min jumps
+- 19-78: 5 min jumps
+- 79-132: 10 min jumps
+- 133-136: 30 min jumps
+- 137-148: 10 min jumps
+- 148-150: 30 min jumps
 
+What possesses someone to do this? I have zero idea of why you'd choose to record data like this. Anyways:
+```{r}
+fix.time <- function (time, type) {
+  library(lubridate)
+  
+  is_zero <- time == 0
+  
+  if(type == "JWAP") {
+    scnds_since_midnight <- 120 + (time-1)*300 + ifelse(time > 6, 150, 0) + 
+                            ifelse(time > 7, 150, 0) + ifelse(time > 9, 150, 0) +
+                            ifelse(time > 10, 150, 0) + ifelse(time > 20, 150, 0) +
+                            ifelse(time > 21, 150, 0)
+  } else if(type == "JWDP") {
+    scnds_since_midnight <- 900 + min(5, time-1)*1800 + 
+           ifelse(time > 6, 1170 + min(11, time - 7)*600, 0) +
+           ifelse(time > 18, 450 + min(59, time - 19)*300, 0) +
+           ifelse(time > 78, 450 + min(53, time - 79)*600, 0) +
+           ifelse(time > 132, 1200 + min(3, time - 133)*1800, 0) +
+           ifelse(time > 136, 1200 + min(11, time - 137)*600, 0) +
+           ifelse(time > 148, 1200 + min(2, time - 149)*1800, 0)
+  } else {
+    stop("Invalid type entered. Enter either 'JWAP' or 'JWDP'.")
+  }
+  
+  scnds_since_midnight[is_zero] <- 0
+  
+  return(hms::as_hms(scnds_since_midnight))
+}
+```
 
-
+I also made an adjustment to how I calculate the `JWAP` times so that the midpoint is still correct even for the irregularly large ranges.
 
 
 
